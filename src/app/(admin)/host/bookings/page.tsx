@@ -1,0 +1,2 @@
+import { getTenantBookings } from "@/app/actions/host/bookings"; import { BookingManager } from "./BookingManager";
+export default async function BookingsPage(){return <BookingManager initial={await getTenantBookings()}/>}

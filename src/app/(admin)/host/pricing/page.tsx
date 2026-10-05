@@ -1,0 +1,2 @@
+import { listProperties } from "@/app/actions/host/properties"; import { listPricingRules } from "@/app/actions/host/pricing"; import { PricingManager } from "./PricingManager";
+export default async function PricingPage(){const p=await listProperties();return <PricingManager properties={p.map(x=>({id:x.id,name:x.name}))} initial={await listPricingRules()}/>}
