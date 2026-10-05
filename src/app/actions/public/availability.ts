@@ -1,3 +1,2 @@
-"use server";
-import { db } from "@/lib/prisma";
+"use server";import { db } from "@/lib/prisma";
 export async function getAvailability(tenantSlug:string,propertySlug:string,from:Date,to:Date){const p=await db.property.findFirst({where:{slug:propertySlug,tenant:{slug:tenantSlug,status:"ACTIVE"},isActive:true,isPublished:true},select:{id:true}});if(!p)throw new Error("PROPERTY_NOT_FOUND");const [bookings,blocks]=await Promise.all([db.booking.findMany({where:{propertyId:p.id,status:{in:["PENDING","CONFIRMED"]},checkIn:{lt:to},checkOut:{gt:from}},select:{checkIn:true,checkOut:true}}),db.blockedDate.findMany({where:{propertyId:p.id,startDate:{lt:to},endDate:{gt:from}},select:{startDate:true,endDate:true}})]);return {bookings,blocks};}
