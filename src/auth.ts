@@ -45,7 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.tenantStatus = user.tenantStatus ?? null;
         token.sessionVersion = user.sessionVersion ?? 0;
       } else if (token.sub) {
-        const current = await db.user.findUnique({ where: { id: token.sub }, include: { tenant: true }, select: { id: true, role: true, tenantId: true, sessionVersion: true, tenant: true } });
+        const current = await db.user.findUnique({ where: { id: token.sub }, select: { id: true, role: true, tenantId: true, sessionVersion: true, tenant: { select: { status: true } } } });
         if (!current || current.sessionVersion !== (token.sessionVersion ?? 0)) return {};
         token.role = current.role;
         token.tenantId = current.tenantId;
