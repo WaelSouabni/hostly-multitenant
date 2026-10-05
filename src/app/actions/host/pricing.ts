@@ -1,0 +1,5 @@
+"use server";
+import { z } from "zod";import { db } from "@/lib/prisma";import { requireHostTenant } from "@/lib/authz";
+const schema=z.object({propertyId:z.string().optional(),name:z.string().min(2),startDate:z.coerce.date().optional(),endDate:z.coerce.date().optional(),weekdays:z.array(z.number().int().min(0).max(6)).default([]),nightlyRate:z.coerce.number().positive().optional(),multiplier:z.coerce.number().positive().optional(),minNights:z.coerce.number().int().positive().optional(),priority:z.coerce.number().int().default(0)});
+export async function createPricingRule(input:z.input<typeof schema>){const {tenant}=await requireHostTenant();const d=schema.parse(input);if(d.propertyId&&!await db.property.findFirst({where:{id:d.propertyId,tenantId:tenant.id}}))throw new Error("PROPERTY_NOT_FOUND");return db.pricingRule.create({data:{...d,tenantId:tenant.id,propertyId:d.propertyId||null}});}
+export async function listPricingRules(propertyId?:string){const {tenant}=await requireHostTenant();return db.pricingRule.findMany({where:{tenantId:tenant.id,propertyId:propertyId??undefined},orderBy:{priority:"desc"}});}
