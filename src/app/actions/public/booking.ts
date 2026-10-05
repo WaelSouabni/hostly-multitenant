@@ -1,4 +1,3 @@
-"use server";
-import { z } from "zod";import { createBooking } from "@/lib/booking";import { db } from "@/lib/prisma";
+"use server";import { z } from "zod";import { createBooking } from "@/lib/booking";import { db } from "@/lib/prisma";
 const schema=z.object({tenantSlug:z.string(),propertySlug:z.string(),checkIn:z.coerce.date(),checkOut:z.coerce.date(),guests:z.coerce.number().int().positive(),clientName:z.string().min(2),clientEmail:z.string().email(),clientPhone:z.string().optional(),clientMessage:z.string().optional(),optionIds:z.array(z.string()).default([]),promoCode:z.string().optional()});
 export async function submitBooking(input:z.input<typeof schema>){const d=schema.parse(input);const p=await db.property.findFirst({where:{slug:d.propertySlug,tenant:{slug:d.tenantSlug,status:"ACTIVE"},isActive:true,isPublished:true}});if(!p)throw new Error("PROPERTY_NOT_FOUND");return createBooking({...d,tenantId:p.tenantId,propertyId:p.id});}
