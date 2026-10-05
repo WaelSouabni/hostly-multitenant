@@ -1,5 +1,0 @@
-import { NextResponse } from "next/server";import Stripe from "stripe";import { auth } from "@/auth";import { db } from "@/lib/prisma";
-const stripe=new Stripe(process.env.STRIPE_SECRET_KEY??"");
-export async function GET(){const session=await auth();if(!session?.user?.tenantId)return NextResponse.json({error:"UNAUTHORIZED"},{status:401});const tenant=await db.tenant.findUnique({where:{id:session.user.tenantId}});if(!tenant)return NextResponse.json({error:"TENANT_NOT_FOUND"},{status:404});
- let accountId=tenant.stripeAccountId;if(!accountId){const account=await stripe.accounts.create({type:"express",email:tenant.hostEmail??undefined});accountId=account.id;await db.tenant.update({where:{id:tenant.id},data:{stripeAccountId:accountId}});}
- const base=process.env.APP_URL??"http://localhost:3000";const link=await stripe.accountLinks.create({account:accountId,refresh_url:`${base}/host/settings?stripe=refresh`,return_url:`${base}/host/settings?stripe=success`,type:"account_onboarding"});return NextResponse.redirect(link.url);}
