@@ -1,0 +1,1 @@
+import{listDomains}from"@/app/actions/host/domains";import{listProperties}from"@/app/actions/host/properties";import{DomainManager}from"./DomainManager";export default async function Page(){const[a,b]=await Promise.all([listDomains(),listProperties()]);return <DomainManager initial={a} properties={b.map(x=>({id:x.id,name:x.name}))}/>}
