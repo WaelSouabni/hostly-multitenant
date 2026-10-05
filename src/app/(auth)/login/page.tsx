@@ -1,3 +1,4 @@
-export default function LoginPage() {
-  return <main className="grid min-h-screen place-items-center p-6"><section className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm"><h1 className="text-2xl font-bold">Connexion</h1><p className="mt-2 text-sm text-slate-500">L'authentification fournisseur sera branchée dans le prochain module.</p></section></main>;
-}
+"use client";
+import { signIn } from "next-auth/react";import { useState } from "react";
+export default function LoginPage(){const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState("");
+return <main className="grid min-h-screen place-items-center p-6"><form onSubmit={async e=>{e.preventDefault();setError("");const r=await signIn("credentials",{email,password,redirect:false});if(r?.error)setError("Identifiants invalides ou compte non actif.");else location.href="/host";}} className="w-full max-w-md space-y-4 rounded-2xl border bg-white p-8 shadow-sm"><h1 className="text-2xl font-bold">Connexion</h1><input className="w-full rounded-lg border p-3" type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/><input className="w-full rounded-lg border p-3" type="password" placeholder="Mot de passe" value={password} onChange={e=>setPassword(e.target.value)} required/><button className="w-full rounded-lg bg-slate-900 p-3 text-white">Se connecter</button>{error&&<p className="text-sm text-red-600">{error}</p>}</form></main>}
