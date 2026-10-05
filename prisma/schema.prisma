@@ -7,13 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { SUPER_ADMIN HOST CLIENT }
-enum TenantStatus { PENDING ACTIVE SUSPENDED REJECTED }
-enum PropertyType { STUDIO GUEST_HOUSE APARTMENT HOUSE }
-enum BookingStatus { PENDING CONFIRMED CANCELLED COMPLETED REJECTED }
-enum PaymentStatus { UNPAID PENDING PAID FAILED REFUNDED }
-enum PromoType { PERCENTAGE FIXED }
-enum InvoiceStatus { DRAFT ISSUED PAID CANCELLED }
+enum Role {
+  SUPER_ADMIN
+  HOST
+  CLIENT
+}
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+enum PropertyType {
+  STUDIO
+  GUEST_HOUSE
+  APARTMENT
+  HOUSE
+}
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REJECTED
+}
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+enum PromoType {
+  PERCENTAGE
+  FIXED
+}
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
 
 model User {
   id String @id @default(cuid())
