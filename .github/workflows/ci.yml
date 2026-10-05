@@ -25,10 +25,11 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npx prisma validate
       - run: npx prisma generate
       - run: npx prisma db push
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - run: npm run test:e2e

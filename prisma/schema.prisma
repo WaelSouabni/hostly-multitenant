@@ -296,7 +296,7 @@ model Invoice {
   tenantId String
   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
   bookingId String @unique
-  booking Booking @relation(fields:[bookingId, tenantId], references:[id, tenantId], onDelete:Restrict)
+  booking Booking @relation(fields:[bookingId], references:[id], onDelete:Restrict)
   number String
   status InvoiceStatus @default(DRAFT)
   issueDate DateTime @default(now())
