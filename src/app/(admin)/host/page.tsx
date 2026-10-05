@@ -1,5 +1,2 @@
-import { getTenantBookings } from "@/app/actions/host/bookings";
-export default async function HostDashboard() {
-  const bookings = await getTenantBookings();
-  return <main className="p-8"><h1 className="text-3xl font-bold">Dashboard hôte</h1><p className="mt-2 text-slate-600">Réservations du tenant connecté : {bookings.length}</p></main>;
-}
+import { getHostDashboard } from "@/app/actions/host/dashboard";
+export default async function HostDashboard(){const d=await getHostDashboard();return <main className="p-8"><h1 className="text-3xl font-bold">Dashboard hôte</h1><div className="mt-6 grid gap-4 md:grid-cols-4">{[["Logements",d.properties],["Réservations actives",d.bookings],["Revenus",String(d.revenue)],["Arrivées aujourd'hui",d.arrivals.length]].map(([l,v])=><div key={String(l)} className="rounded-xl border bg-white p-5"><div className="text-sm text-slate-500">{l}</div><div className="mt-2 text-3xl font-bold">{v}</div></div>)}</div><h2 className="mt-10 text-xl font-semibold">Arrivées</h2><ul className="mt-3 space-y-2">{d.arrivals.map(a=><li key={a.id} className="rounded-lg border bg-white p-4">{a.clientName} — {a.property.name}</li>)}</ul></main>}
