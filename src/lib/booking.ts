@@ -7,6 +7,7 @@ const PENDING_HOLD_MINUTES = 15;
 export async function createBooking(input: {
   tenantId: string;
   propertyId: string;
+  clientId?: string;
   checkIn: Date;
   checkOut: Date;
   guests: number;
@@ -146,6 +147,7 @@ export async function createBooking(input: {
         data: {
           tenantId: input.tenantId,
           propertyId: input.propertyId,
+          clientId: input.clientId,
           status: "PENDING",
           paymentStatus: "UNPAID",
           checkIn: input.checkIn,
