@@ -1,4 +1,3 @@
-"use server";
-import { db } from "@/lib/prisma";import { requireHostTenant } from "@/lib/authz";
+"use server";import { db } from "@/lib/prisma";import { requireHostTenant } from "@/lib/authz";
 export async function getTenantBookings(){const {tenant}=await requireHostTenant();return db.booking.findMany({where:{tenantId:tenant.id},include:{property:{select:{id:true,name:true,slug:true}},options:{include:{option:true}},invoice:{select:{id:true,number:true,status:true,total:true}}},orderBy:{checkIn:"asc"}});}
 export async function updateBookingStatus(id:string,status:"CONFIRMED"|"REJECTED"|"CANCELLED"|"COMPLETED"){const {tenant}=await requireHostTenant();const r=await db.booking.updateMany({where:{id,tenantId:tenant.id},data:{status}});if(!r.count)throw new Error("BOOKING_NOT_FOUND");return {ok:true};}
