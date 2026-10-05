@@ -1,28 +1,4 @@
-import { auth } from "@/auth";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-
-const RESERVED = new Set(["localhost","www","admin","api"]);
-
-export default auth((request: NextRequest) => {
-  const host = request.headers.get("host")?.split(":")[0] ?? "";
-  const root = (process.env.PLATFORM_DOMAIN ?? "localhost:3000").split(":")[0];
-
-  if (!host || host === root || RESERVED.has(host.split(".")[0] ?? "")) {
-    return NextResponse.next();
-  }
-
-  const suffix = "." + root;
-  if (!host.endsWith(suffix)) return NextResponse.next();
-
-  const tenantSlug = host.slice(0, -suffix.length);
-  if (!tenantSlug) return NextResponse.next();
-
-  const url = request.nextUrl.clone();
-  url.pathname = "/site/" + tenantSlug + request.nextUrl.pathname;
-  return NextResponse.rewrite(url);
-});
-
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"]
-};
+import{auth}from"@/auth";import{NextResponse}from"next/server";import type{NextRequest}from"next/server";import{db}from"@/lib/prisma";
+const RESERVED=new Set(["localhost","www","admin","api"]);
+export default auth(async request=>{const host=request.headers.get("host")?.split(":")[0]?.toLowerCase()??"";const root=(process.env.PLATFORM_DOMAIN??"localhost").split(":")[0].toLowerCase();if(!host||host===root||RESERVED.has(host.split(".")[0]??""))return NextResponse.next();let slug:string|undefined;const suffix="."+root;if(host.endsWith(suffix))slug=host.slice(0,-suffix.length);else{const domain=await db.propertyDomain.findUnique({where:{hostname:host},select:{property:{select:{tenant:{select:{slug:true,status:true}}}}}});if(domain?.property.tenant.status==="ACTIVE")slug=domain.property.tenant.slug}if(!slug)return NextResponse.next();const url=request.nextUrl.clone();url.pathname="/site/"+slug+request.nextUrl.pathname;return NextResponse.rewrite(url)});
+export const config={matcher:["/((?!api|_next/static|_next/image|favicon.ico).*)"]};
