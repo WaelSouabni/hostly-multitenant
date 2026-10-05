@@ -24,10 +24,11 @@ export default auth(async (request: NextRequest) => {
       where: { hostname: host },
       select: {
         property: { select: { slug: true, tenant: { select: { slug: true, status: true } } } },
+        verifiedAt: true,
       },
     });
 
-    if (domain?.property.tenant.status === "ACTIVE") {
+    if (domain?.verifiedAt && domain.property.tenant.status === "ACTIVE") {
       tenantSlug = domain.property.tenant.slug;
       propertySlug = domain.property.slug;
     }
