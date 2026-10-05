@@ -1,0 +1,14 @@
+"use server";
+import { randomBytes } from "crypto";
+import { hash, compare } from "bcryptjs";
+import { z } from "zod";
+import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
+const emailSchema=z.object({email:z.string().email().transform(v=>v.trim().toLowerCase())});
+const passwordSchema=z.object({password:z.string().min(8),newPassword:z.string().min(8)});
+async function issueToken(identifier:string,hours:number){const token=randomBytes(32).toString("hex");await db.verificationToken.deleteMany({where:{identifier}});await db.verificationToken.create({data:{identifier,token,expires:new Date(Date.now()+hours*3600000)}});return token;}
+export async function requestPasswordReset(input:{email:string}){const{email}=emailSchema.parse(input);const user=await db.user.findUnique({where:{email}});if(!user)return{ok:true,token:null};const token=await issueToken(`password-reset:${email}`,1);return{ok:true,token:process.env.NODE_ENV==="production"?null:token};}
+export async function resetPassword(input:{token:string;password:string}){const password=z.string().min(8).parse(input.password);const record=await db.verificationToken.findUnique({where:{token:input.token}});if(!record||record.expires<new Date()||!record.identifier.startsWith("password-reset:"))throw new Error("RESET_TOKEN_INVALID");const email=record.identifier.slice("password-reset:".length);await db.user.update({where:{email},data:{passwordHash:await hash(password,12)}});await db.verificationToken.delete({where:{token:input.token}});return{ok:true};}
+export async function changePassword(input:{currentPassword:string;newPassword:string}){const parsed=passwordSchema.parse(input);const session=await auth();if(!session?.user?.id)throw new Error("UNAUTHENTICATED");const user=await db.user.findUnique({where:{id:session.user.id}});if(!user?.passwordHash||!(await compare(parsed.password,user.passwordHash)))throw new Error("CURRENT_PASSWORD_INVALID");await db.user.update({where:{id:user.id},data:{passwordHash:await hash(parsed.newPassword,12)}});return{ok:true};}
+export async function issueEmailVerification(){const session=await auth();if(!session?.user?.id||!session.user.email)throw new Error("UNAUTHENTICATED");const token=await issueToken(`email-verify:${session.user.email.toLowerCase()}`,24);return{ok:true,token:process.env.NODE_ENV==="production"?null:token};}
+export async function verifyEmail(token:string){const record=await db.verificationToken.findUnique({where:{token}});if(!record||record.expires<new Date()||!record.identifier.startsWith("email-verify:"))throw new Error("VERIFY_TOKEN_INVALID");const email=record.identifier.slice("email-verify:".length);await db.user.update({where:{email},data:{emailVerified:new Date()}});await db.verificationToken.delete({where:{token}});return{ok:true};}
