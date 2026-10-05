@@ -1,0 +1,8 @@
+"use server";
+import { z } from "zod";import { db } from "@/lib/prisma";import { requireHostTenant } from "@/lib/authz";
+const schema=z.object({name:z.string().min(2),slug:z.string().regex(/^[a-z0-9-]+$/),type:z.enum(["STUDIO","GUEST_HOUSE","APARTMENT","HOUSE"]),description:z.string().optional(),baseNightlyRate:z.coerce.number().positive(),maxGuests:z.coerce.number().int().positive()});
+export async function listProperties(){const {tenant}=await requireHostTenant();return db.property.findMany({where:{tenantId:tenant.id},include:{images:true},orderBy:{createdAt:"desc"}});}
+export async function createProperty(input:z.input<typeof schema>){const {tenant}=await requireHostTenant();const d=schema.parse(input);return db.property.create({data:{...d,tenantId:tenant.id}});}
+export async function updateProperty(id:string,input:z.input<typeof schema>){const {tenant}=await requireHostTenant();const d=schema.parse(input);const r=await db.property.updateMany({where:{id,tenantId:tenant.id},data:d});if(!r.count)throw new Error("PROPERTY_NOT_FOUND");return db.property.findUniqueOrThrow({where:{id}});}
+export async function deleteProperty(id:string){const {tenant}=await requireHostTenant();const r=await db.property.deleteMany({where:{id,tenantId:tenant.id}});if(!r.count)throw new Error("PROPERTY_NOT_FOUND");return {ok:true};}
+export async function setPropertyPublished(id:string,isPublished:boolean){const {tenant}=await requireHostTenant();const r=await db.property.updateMany({where:{id,tenantId:tenant.id},data:{isPublished}});if(!r.count)throw new Error("PROPERTY_NOT_FOUND");return {ok:true};}
