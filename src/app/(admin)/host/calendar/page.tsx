@@ -1,0 +1,2 @@
+import { listProperties } from "@/app/actions/host/properties"; import { CalendarManager } from "./CalendarManager";
+export default async function CalendarPage(){const p=await listProperties();return <CalendarManager properties={p.map(x=>({id:x.id,name:x.name}))}/>}

@@ -1,0 +1,2 @@
+import { listProperties } from "@/app/actions/host/properties"; import { PropertyManager } from "./PropertyManager";
+export default async function HostPropertiesPage(){return <PropertyManager initial={await listProperties()}/>}
