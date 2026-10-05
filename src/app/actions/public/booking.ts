@@ -1,5 +1,7 @@
 "use server";
 
+import { auth } from "@/auth";
+
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { createBooking } from "@/lib/booking";
@@ -178,9 +180,12 @@ export async function submitBooking(input: z.input<typeof schema>) {
   if (!property) throw new Error("PROPERTY_NOT_FOUND");
   if (data.guests > property.maxGuests) throw new Error("TOO_MANY_GUESTS");
 
+  const session = await auth();
+  const clientId = session?.user?.role === "CLIENT" && session.user.tenantId === property.tenantId ? session.user.id : undefined;
   return createBooking({
     ...data,
     tenantId: property.tenantId,
     propertyId: property.id,
+    clientId,
   });
 }
