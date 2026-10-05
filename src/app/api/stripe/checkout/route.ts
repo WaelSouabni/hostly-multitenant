@@ -1,0 +1,6 @@
+import { NextResponse } from "next/server";import Stripe from "stripe";import { db } from "@/lib/prisma";
+const stripe=new Stripe(process.env.STRIPE_SECRET_KEY??"");
+export async function POST(req:Request){try{const {bookingId}=await req.json();const booking=await db.booking.findUnique({where:{id:bookingId},include:{tenant:{include:{settings:true}},property:true}});if(!booking)return NextResponse.json({error:"BOOKING_NOT_FOUND"},{status:404});if(!booking.tenant.stripeAccountId)return NextResponse.json({error:"STRIPE_NOT_CONNECTED"},{status:409});
+ const currency=(booking.tenant.settings?.currency??"EUR").toLowerCase();const base=process.env.APP_URL??"http://localhost:3000";
+ const session=await stripe.checkout.sessions.create({mode:"payment",customer_email:booking.clientEmail,line_items:[{price_data:{currency,product_data:{name:`Séjour — ${booking.property.name}`},unit_amount:Math.round(Number(booking.total)*100)},quantity:1}],metadata:{bookingId:booking.id,tenantId:booking.tenantId},success_url:`${base}/booking/success?session_id={CHECKOUT_SESSION_ID}`,cancel_url:`${base}/booking/cancelled`},{stripeAccount:booking.tenant.stripeAccountId});
+ return NextResponse.json({url:session.url});}catch{return NextResponse.json({error:"CHECKOUT_FAILED"},{status:400});}}
