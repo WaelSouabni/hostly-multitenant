@@ -47,6 +47,7 @@ model Tenant {
   postalCode String?
   city String?
   country String @default("FR")
+  stripeAccountId String? @unique
   taxNumber String?
   siret String?
   vatRate Decimal @default(0) @db.Decimal(5,2)
