@@ -1,0 +1,6 @@
+"use server";
+import { hash } from "bcryptjs";import { z } from "zod";import { db } from "@/lib/prisma";import { requireRole } from "@/lib/authz";import { Role,TenantStatus } from "@prisma/client";
+const schema=z.object({name:z.string().min(2),slug:z.string().regex(/^[a-z0-9-]+$/),email:z.string().email(),hostName:z.string().min(2),password:z.string().min(8)});
+export async function createHost(input:z.input<typeof schema>){await requireRole(Role.SUPER_ADMIN);const d=schema.parse(input);return db.tenant.create({data:{name:d.name,slug:d.slug,status:TenantStatus.PENDING,hostName:d.hostName,hostEmail:d.email,users:{create:{name:d.hostName,email:d.email,passwordHash:await hash(d.password,12),role:Role.HOST}}});}
+export async function setTenantStatus(id:string,status:TenantStatus){await requireRole(Role.SUPER_ADMIN);return db.tenant.update({where:{id},data:{status}});}
+export async function listTenants(){await requireRole(Role.SUPER_ADMIN);return db.tenant.findMany({include:{_count:{select:{properties:true,bookings:true,users:true}}},orderBy:{createdAt:"desc"}});}
