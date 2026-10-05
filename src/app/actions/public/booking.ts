@@ -181,7 +181,7 @@ export async function submitBooking(input: z.input<typeof schema>) {
   if (data.guests > property.maxGuests) throw new Error("TOO_MANY_GUESTS");
 
   const session = await auth();
-  const clientId = session?.user?.role === "CLIENT" && session.user.tenantId === property.tenantId ? session.user.id : undefined;
+  const clientId = session?.user?.role === "CLIENT" ? session.user.id : undefined;
   return createBooking({
     ...data,
     tenantId: property.tenantId,
