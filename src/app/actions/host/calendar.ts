@@ -1,0 +1,6 @@
+"use server";
+import { z } from "zod";import { db } from "@/lib/prisma";import { requireHostTenant } from "@/lib/authz";
+const schema=z.object({propertyId:z.string(),startDate:z.coerce.date(),endDate:z.coerce.date(),reason:z.string().max(200).optional()});
+export async function blockDates(input:z.input<typeof schema>){const {tenant}=await requireHostTenant();const d=schema.parse(input);if(d.endDate<=d.startDate)throw new Error("INVALID_DATES");const p=await db.property.findFirst({where:{id:d.propertyId,tenantId:tenant.id}});if(!p)throw new Error("PROPERTY_NOT_FOUND");return db.blockedDate.create({data:d});}
+export async function unblockDates(id:string){const {tenant}=await requireHostTenant();const r=await db.blockedDate.deleteMany({where:{id,property:{tenantId:tenant.id}}});if(!r.count)throw new Error("BLOCK_NOT_FOUND");return {ok:true};}
+export async function getCalendar(propertyId:string,from:Date,to:Date){const {tenant}=await requireHostTenant();return Promise.all([db.booking.findMany({where:{propertyId,tenantId:tenant.id,checkIn:{lt:to},checkOut:{gt:from}},orderBy:{checkIn:"asc"}}),db.blockedDate.findMany({where:{propertyId,property:{tenantId:tenant.id},startDate:{lt:to},endDate:{gt:from}},orderBy:{startDate:"asc"}})]);}
