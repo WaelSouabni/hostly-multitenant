@@ -1,6 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { randomBytes } from "crypto";
+import { promises as dns } from "dns";
 import { db } from "@/lib/prisma";
 import { requireHostTenant } from "@/lib/authz";
 
@@ -44,6 +46,7 @@ export async function addDomain(input: { propertyId: string; hostname: string })
       tenantId: tenant.id,
       propertyId: property.id,
       hostname,
+      verificationToken: `hostly_${randomBytes(18).toString("hex")}`,
     },
   });
 }
@@ -75,4 +78,25 @@ export async function setPrimaryDomain(id: string) {
       data: { isPrimary: true },
     });
   });
+}
+
+
+export async function getDomainVerification(id: string) {
+  const { tenant } = await requireHostTenant();
+  const domain = await db.propertyDomain.findFirst({ where: { id, tenantId: tenant.id }, select: { id: true, hostname: true, verificationToken: true, verifiedAt: true } });
+  if (!domain) throw new Error("DOMAIN_NOT_FOUND");
+  return { ...domain, recordName: `_hostly-verification.${domain.hostname}` };
+}
+
+export async function verifyDomain(id: string) {
+  const { tenant } = await requireHostTenant();
+  const domain = await db.propertyDomain.findFirst({ where: { id, tenantId: tenant.id } });
+  if (!domain) throw new Error("DOMAIN_NOT_FOUND");
+  if (!domain.verificationToken) throw new Error("VERIFICATION_TOKEN_MISSING");
+  const recordName = `_hostly-verification.${domain.hostname}`;
+  let values: string[] = [];
+  try { values = (await dns.resolveTxt(recordName)).flat(); } catch { values = []; }
+  const verified = values.includes(domain.verificationToken);
+  await db.propertyDomain.update({ where: { id: domain.id }, data: { verifiedAt: verified ? new Date() : null, lastVerificationAt: new Date() } });
+  return { verified, recordName, token: domain.verificationToken };
 }
