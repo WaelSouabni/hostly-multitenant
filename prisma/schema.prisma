@@ -145,6 +145,7 @@ model Property {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([tenantId, slug])
+  @@unique([id, tenantId])
   @@index([tenantId, isActive, isPublished])
 }
 
@@ -203,6 +204,7 @@ model StayOption {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([tenantId, name])
+  @@unique([id, tenantId])
 }
 
 model PromoCode {
@@ -232,7 +234,7 @@ model Booking {
   tenantId String
   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
   propertyId String
-  property Property @relation(fields:[propertyId], references:[id], onDelete:Restrict)
+  property Property @relation(fields:[propertyId, tenantId], references:[id, tenantId], onDelete:Restrict)
   clientId String?
   client User? @relation("ClientBookings", fields:[clientId], references:[id], onDelete:SetNull)
   status BookingStatus @default(PENDING)
@@ -257,6 +259,7 @@ model Booking {
   invoice Invoice?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@unique([id, tenantId])
   @@index([tenantId, checkIn, checkOut])
   @@index([propertyId, checkIn, checkOut, status])
   @@index([tenantId, status, createdAt])
@@ -264,14 +267,16 @@ model Booking {
 
 model BookingOption {
   id String @id @default(cuid())
+  tenantId String
   bookingId String
-  booking Booking @relation(fields:[bookingId], references:[id], onDelete:Cascade)
+  booking Booking @relation(fields:[bookingId, tenantId], references:[id, tenantId], onDelete:Cascade)
   optionId String
-  option StayOption @relation(fields:[optionId], references:[id], onDelete:Restrict)
+  option StayOption @relation(fields:[optionId, tenantId], references:[id, tenantId], onDelete:Restrict)
   quantity Int @default(1)
   unitPrice Decimal @db.Decimal(10,2)
   total Decimal @db.Decimal(10,2)
   @@unique([bookingId, optionId])
+  @@index([tenantId])
 }
 
 model Invoice {
@@ -279,7 +284,7 @@ model Invoice {
   tenantId String
   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
   bookingId String @unique
-  booking Booking @relation(fields:[bookingId], references:[id], onDelete:Restrict)
+  booking Booking @relation(fields:[bookingId, tenantId], references:[id, tenantId], onDelete:Restrict)
   number String
   status InvoiceStatus @default(DRAFT)
   issueDate DateTime @default(now())
@@ -328,7 +333,7 @@ model PropertyDomain {
   tenantId String
   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
   propertyId String
-  property Property @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  property Property @relation(fields:[propertyId, tenantId], references:[id, tenantId], onDelete:Cascade)
   hostname String @unique
   isPrimary Boolean @default(false)
   verifiedAt DateTime?
