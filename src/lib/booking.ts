@@ -81,8 +81,7 @@ export async function createBooking(input: {
       );
 
       let discount = new Prisma.Decimal(0);
-      let promo: typeof property.tenant.options[number] | null = null;
-      let promoCodeId: string | undefined;
+      let promo: { id: string; maxUses: number | null } | null = null;
 
       if (input.promoCode) {
         const candidate = await tx.promoCode.findFirst({
@@ -117,7 +116,7 @@ export async function createBooking(input: {
               candidate.type === "PERCENTAGE"
                 ? base.subtotal.mul(candidate.value).div(100)
                 : Prisma.Decimal.min(candidate.value, base.subtotal);
-            promoCodeId = candidate.id;
+            promo = { id: candidate.id, maxUses: candidate.maxUses };
           }
         }
       }
@@ -158,7 +157,7 @@ export async function createBooking(input: {
           cleaningFee: calc.cleaningFee,
           touristTax: calc.touristTax,
           total: calc.total,
-          promoCodeId,
+          promoCodeId: promo?.id,
           clientName: input.clientName.trim(),
           clientEmail: input.clientEmail.trim().toLowerCase(),
           clientPhone: input.clientPhone?.trim() || undefined,
@@ -178,14 +177,13 @@ export async function createBooking(input: {
         },
       });
 
-      if (promoCodeId) {
+      if (promo) {
         const updated = await tx.promoCode.updateMany({
           where: {
-            id: promoCodeId,
-            OR: [
-              { maxUses: null },
-              { usedCount: { lt: (await tx.promoCode.findUniqueOrThrow({ where: { id: promoCodeId }, select: { maxUses: true } })).maxUses! } },
-            ],
+            id: promo.id,
+            ...(promo.maxUses === null
+              ? {}
+              : { usedCount: { lt: promo.maxUses } }),
           },
           data: { usedCount: { increment: 1 } },
         });
