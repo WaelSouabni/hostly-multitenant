@@ -148,6 +148,7 @@ export async function createBooking(input: {
           clientMessage: input.clientMessage,
           options: {
             create: selected.map((o) => ({
+              tenantId: input.tenantId,
               optionId: o.id,
               quantity: 1,
               unitPrice: o.price,
