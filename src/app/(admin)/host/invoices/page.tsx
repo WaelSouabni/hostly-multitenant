@@ -1,0 +1,1 @@
+import{listInvoices}from"@/app/actions/host/invoices";import{InvoiceManager}from"./InvoiceManager";export default async function Page(){return <InvoiceManager initial={await listInvoices()}/>}
