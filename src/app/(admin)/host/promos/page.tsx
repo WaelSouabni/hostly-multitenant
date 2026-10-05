@@ -1,0 +1,1 @@
+import{listPromos}from"@/app/actions/host/promos";import{listProperties}from"@/app/actions/host/properties";import{PromoManager}from"./PromoManager";export default async function Page(){const[a,b]=await Promise.all([listPromos(),listProperties()]);return <PromoManager initial={a} properties={b.map(x=>({id:x.id,name:x.name}))}/>}
