@@ -255,6 +255,7 @@ model Booking {
   clientPhone String?
   clientMessage String?
   stripePaymentId String?
+  expiresAt DateTime?
   options BookingOption[]
   invoice Invoice?
   createdAt DateTime @default(now())
@@ -263,6 +264,17 @@ model Booking {
   @@index([tenantId, checkIn, checkOut])
   @@index([propertyId, checkIn, checkOut, status])
   @@index([tenantId, status, createdAt])
+  @@index([propertyId, status, expiresAt])
+}
+
+model StripeEvent {
+  id String @id @default(cuid())
+  eventId String @unique
+  accountId String?
+  type String
+  processedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  @@index([accountId, createdAt])
 }
 
 model BookingOption {
@@ -299,6 +311,7 @@ model Invoice {
   items InvoiceItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@unique([bookingId, tenantId])
   @@unique([tenantId, number])
   @@index([tenantId, status, issueDate])
 }
