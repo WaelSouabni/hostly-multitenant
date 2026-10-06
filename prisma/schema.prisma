@@ -362,6 +362,22 @@ model PropertyDomain {
   @@index([tenantId, propertyId])
 }
 
+model SecurityEvent {
+  id String @id @default(cuid())
+  tenantId String?
+  userId String?
+  type String
+  ipAddress String?
+  userAgent String?
+  metadata String? @db.Text
+  createdAt DateTime @default(now())
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
 model Account {
   userId String
   type String
