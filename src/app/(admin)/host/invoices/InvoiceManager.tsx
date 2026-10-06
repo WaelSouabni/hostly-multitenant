@@ -1,0 +1,9 @@
+"use client";
+import { useState } from "react";
+import { setInvoiceStatus } from "@/app/actions/host/invoices";
+import { sendInvoiceEmail } from "@/app/actions/host/invoice-email";
+
+export function InvoiceManager({initial}:{initial:any[]}) {
+ const [items,setItems]=useState(initial),[message,setMessage]=useState("");
+ return <main className="min-h-screen bg-slate-50 p-6"><div className="mx-auto max-w-7xl space-y-6"><a href="/host">← Dashboard</a><h1 className="text-3xl font-bold">Facturation</h1>{message&&<p className="text-sm text-slate-600">{message}</p>}<div className="overflow-x-auto rounded-2xl border bg-white"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-4">Facture</th><th className="p-4">Client</th><th className="p-4">Logement</th><th className="p-4">Total</th><th className="p-4">Statut</th><th className="p-4">Actions</th></tr></thead><tbody>{items.map(i=><tr key={i.id} className="border-b"><td className="p-4">{i.number}</td><td className="p-4">{i.billingName}<br/>{i.billingEmail}</td><td className="p-4">{i.booking.property.name}</td><td className="p-4">{i.total.toString()} €</td><td className="p-4">{i.status}</td><td className="p-4"><div className="flex flex-wrap gap-2"><button onClick={async()=>{const s=i.status==="PAID"?"ISSUED":"PAID";await setInvoiceStatus(i.id,s);setItems(x=>x.map(v=>v.id===i.id?{...v,status:s}:v))}} className="rounded border px-2 py-1 text-xs">{i.status==="PAID"?"Annuler paiement":"Marquer payée"}</button><a href={`/api/invoices/${i.id}/pdf`} target="_blank" rel="noreferrer" className="rounded border px-2 py-1 text-xs">PDF</a><button onClick={async()=>{try{await sendInvoiceEmail(i.id);setMessage("Email envoyé.");}catch(e){setMessage(e instanceof Error?e.message:"Erreur email")}}} className="rounded border px-2 py-1 text-xs">Envoyer email</button></div></td></tr>)}</tbody></table></div></div></main>
+}

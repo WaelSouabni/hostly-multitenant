@@ -62,6 +62,10 @@ model User {
   accounts Account[]
   sessions Session[]
   bookings Booking[] @relation("ClientBookings")
+  securityEvents SecurityEvent[]
+  loginFailures Int @default(0)
+  lockedUntil DateTime?
+  sessionVersion Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([tenantId, role])
@@ -97,6 +101,7 @@ model Tenant {
   contactMessages ContactMessage[]
   settings TenantSetting?
   domains PropertyDomain[]
+  securityEvents SecurityEvent[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([status])
@@ -254,6 +259,7 @@ model Booking {
   clientEmail String
   clientPhone String?
   clientMessage String?
+  cancellationReason String?
   stripePaymentId String?
   expiresAt DateTime?
   options BookingOption[]
@@ -349,9 +355,36 @@ model PropertyDomain {
   property Property @relation(fields:[propertyId, tenantId], references:[id, tenantId], onDelete:Cascade)
   hostname String @unique
   isPrimary Boolean @default(false)
+  verificationToken String?
   verifiedAt DateTime?
+  lastVerificationAt DateTime?
   createdAt DateTime @default(now())
   @@index([tenantId, propertyId])
+}
+
+model SecurityEvent {
+  id String @id @default(cuid())
+  tenantId String?
+  userId String?
+  type String
+  ipAddress String?
+  userAgent String?
+  metadata String? @db.Text
+  createdAt DateTime @default(now())
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model RateLimitBucket {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([resetAt])
 }
 
 model Account {

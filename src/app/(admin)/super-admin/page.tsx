@@ -1,8 +1,7 @@
-import { db } from "@/lib/prisma";
-import { auth } from "@/auth";
-export default async function SuperAdminPage() {
-  const session = await auth();
-  if (session?.user?.role !== "SUPER_ADMIN") return <main className="p-8">Accès refusé.</main>;
-  const [tenants,properties,bookings] = await Promise.all([db.tenant.count(),db.property.count(),db.booking.count()]);
-  return <main className="p-8"><h1 className="text-3xl font-bold">Super Admin</h1><div className="mt-6 grid gap-4 md:grid-cols-3">{[[ "Tenants",tenants ],[ "Logements",properties ],[ "Réservations",bookings ]].map(([label,value])=><div key={label} className="rounded-xl border bg-white p-5"><div className="text-sm text-slate-500">{label}</div><div className="mt-2 text-3xl font-bold">{value}</div></div>)}</div></main>;
+import { getSuperAdminOverview } from "@/app/actions/super-admin";
+import { TenantControls } from "./TenantControls";
+
+export default async function SuperAdminPage(){
+  const d=await getSuperAdminOverview();
+  return <main className="min-h-screen bg-slate-50 p-6"><div className="mx-auto max-w-7xl space-y-6"><h1 className="text-3xl font-bold">SUPER_ADMIN</h1><div className="grid gap-4 md:grid-cols-4">{[["Tenants",d.tenants.length],["Utilisateurs",d.users],["Réservations",d.bookings],["CA",d.revenue.toFixed(2)+" €"]].map(([l,v])=><div key={String(l)} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{l}</p><p className="text-2xl font-bold">{v}</p></div>)}</div><div className="overflow-x-auto rounded-2xl border bg-white"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-4">Tenant</th><th className="p-4">Statut</th><th className="p-4">Propriétés</th><th className="p-4">Réservations</th><th className="p-4">Actions</th></tr></thead><tbody>{d.tenants.map(t=><tr key={t.id} className="border-b"><td className="p-4 font-medium">{t.name}</td><td className="p-4">{t.status}</td><td className="p-4">{t._count.properties}</td><td className="p-4">{t._count.bookings}</td><td className="p-4"><TenantControls id={t.id} status={t.status}/></td></tr>)}</tbody></table></div></div></main>;
 }

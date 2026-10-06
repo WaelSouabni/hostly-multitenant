@@ -1,0 +1,11 @@
+"use client";
+import { useState } from "react";
+import { addDomain, listDomains, removeDomain, setPrimaryDomain, getDomainVerification, verifyDomain } from "@/app/actions/host/domains";
+
+export function DomainManager({ initial, properties }: { initial: any[]; properties: { id: string; name: string }[] }) {
+  const [items,setItems]=useState(initial),[propertyId,setPropertyId]=useState(properties[0]?.id??""),[hostname,setHostname]=useState(""),[message,setMessage]=useState("");
+  async function refresh(){setItems(await listDomains())}
+  async function add(){try{await addDomain({propertyId,hostname});setHostname("");setMessage("Domaine ajouté.");await refresh()}catch(e){setMessage(e instanceof Error?e.message:"Erreur")}}
+  async function verify(id:string){try{const v=await getDomainVerification(id);const r=await verifyDomain(id);setMessage(r.verified?"Domaine vérifié.":`Ajoutez un TXT ${v.recordName} = ${v.verificationToken ?? ""}, puis relancez la vérification.`);await refresh()}catch(e){setMessage(e instanceof Error?e.message:"Erreur")}}
+  return <div className="space-y-4"><div className="grid gap-2 md:grid-cols-3"><select className="rounded-lg border p-2" value={propertyId} onChange={e=>setPropertyId(e.target.value)}>{properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select><input className="rounded-lg border p-2" placeholder="domaine.fr" value={hostname} onChange={e=>setHostname(e.target.value)}/><button onClick={add} className="rounded-lg bg-indigo-600 px-4 py-2 text-white">Ajouter</button></div>{message&&<p className="text-sm text-slate-600">{message}</p>}<div className="space-y-2">{items.map(d=><div key={d.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4"><div><b>{d.hostname}</b><p className="text-xs text-slate-500">{d.verifiedAt?"✓ Vérifié":"⚠ Non vérifié"} · {d.isPrimary?"Principal":"Secondaire"}</p></div><div className="flex gap-2"><button onClick={()=>verify(d.id)} className="rounded border px-3 py-1 text-xs">Vérifier DNS</button><button onClick={async()=>{await setPrimaryDomain(d.id);await refresh()}} className="rounded border px-3 py-1 text-xs">Principal</button><button onClick={async()=>{await removeDomain(d.id);await refresh()}} className="rounded border px-3 py-1 text-xs text-red-600">Supprimer</button></div></div>)}</div></div>
+}

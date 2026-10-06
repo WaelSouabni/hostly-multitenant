@@ -1,0 +1,3 @@
+"use client";
+import { setTenantStatus } from "@/app/actions/super-admin";
+export function TenantControls({id,status}:{id:string,status:string}){return <div className="flex flex-wrap gap-1">{["ACTIVE","SUSPENDED","REJECTED"].map(s=><button key={s} disabled={s===status} onClick={async()=>{await setTenantStatus(id,s as any);location.reload()}} className="rounded border px-2 py-1 text-xs">{s}</button>)}</div>}
