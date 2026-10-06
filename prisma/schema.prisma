@@ -378,6 +378,15 @@ model SecurityEvent {
   @@index([type, createdAt])
 }
 
+model RateLimitBucket {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([resetAt])
+}
+
 model Account {
   userId String
   type String
